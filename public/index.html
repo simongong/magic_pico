@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Text Replacer</title>
+    <style>#container {
+  gap: 20px;
+  display: flex;
+}
+
+#image-preview {
+  cursor: pointer;
+  border: 1px solid #ccc;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  overflow: hidden;
+}
+
+#image-preview img {
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#overlay {
+  z-index: 1000;
+  background-color: #00000080;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#overlay img {
+  max-width: 90%;
+  max-height: 90%;
+}
+</style>
+</head>
+<body>
+    <h1>Replace Text in Image</h1>
+    <div id="container">
+        <div>
+            <input type="file" name="image" id="imageInput" required=""><br><br>
+            Old Text: <input type="text" id="oldText" required=""><br><br>
+            New Text: <input type="text" id="newText" required=""><br><br>
+            <button id="replaceButton">Replace Text</button>
+        </div>
+        <div id="image-preview">
+            <img id="preview" src="#" alt="Image preview">
+        </div>
+    </div>
+    <div id="overlay">
+        <img id="full-image" alt="Full Image">
+    </div>
+
+    <div id="result-container">
+        <h2>Result</h2>
+        <img id="result-image" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Result Image">
+    </div>
+
+    <script>const imageInput = document.getElementById('imageInput');
+const preview = document.getElementById('preview');
+const overlay = document.getElementById('overlay');
+const fullImage = document.getElementById('full-image');
+const imagePreview = document.getElementById('image-preview');
+const replaceButton = document.getElementById('replaceButton');
+const resultImage = document.getElementById('result-image');
+const oldText = document.getElementById('oldText');
+const newText = document.getElementById('newText');
+imageInput.addEventListener('change', (event)=>{
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e)=>{
+            preview.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    } else preview.src = "#";
+});
+imagePreview.addEventListener('click', ()=>{
+    if (preview.src != "#") {
+        fullImage.src = preview.src;
+        overlay.style.display = 'flex';
+    }
+});
+overlay.addEventListener('click', ()=>{
+    overlay.style.display = 'none';
+});
+replaceButton.addEventListener('click', async (event)=>{
+    event.preventDefault(); // Prevent default form submission
+    const file = imageInput.files[0];
+    if (!file) {
+        alert("Please select an image.");
+        return;
+    }
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('oldText', oldText.value);
+    formData.append('newText', newText.value);
+    try {
+        const response = await fetch('/replaceText', {
+            method: 'POST',
+            body: formData
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error ${response.status}: ${errorText}`);
+        }
+        const blob = await response.blob();
+        const imageObjectURL = URL.createObjectURL(blob);
+        resultImage.src = imageObjectURL;
+    } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred: " + error.message);
+    }
+});
+
+</script>
+<script src="/magicPico.6f5f6532.js"></script></body>
+</html>

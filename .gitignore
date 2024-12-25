@@ -1,0 +1,6 @@
+.parcel-cache
+node_modules
+magicPico.*.js
+magicPico.*.js.map
+package-lock.json
+uploads
